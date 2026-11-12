@@ -3,8 +3,4 @@
 
 mod greet;
 
-pub use greet::greet;
-
-// The Python bindings are only compiled when the `python` feature is enabled.
-#[cfg(feature = "python")]
-mod python;
+pub use greet::{GreetError, greet};

@@ -6,7 +6,7 @@ This is the Rust library behind the [`avcopan_trialrs`](https://pypi.org/project
 It has no Python dependency.
 
 ```rust
-assert_eq!(avcopan_trialrs::greet("World"), "Hello, World!");
+assert_eq!(avcopan_trialrs::greet("World"), Ok("Hello, World!".to_string()));
 ```
 
 See the [documentation site](https://avcopan.github.io/avcopan_trialrs/) for the Python API, and the [repository](https://github.com/avcopan/avcopan_trialrs) for the source code.

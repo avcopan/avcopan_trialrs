@@ -1,0 +1,21 @@
+# The Python bindings of the avcopan_trialrs library, compiled by maturin into the Python
+# extension module `avcopan_trialrs._core` (see `tool.maturin` in pyproject.toml)
+[package]
+name = "py-avcopan_trialrs"
+version.workspace = true
+edition.workspace = true
+description = "Python bindings for avcopan_trialrs"
+license.workspace = true
+repository.workspace = true
+publish = false  # released as a Python package (PyPI, Conda), not on crates.io
+
+[lib]
+crate-type = ["cdylib"]  # a shared library that Python can load
+
+[dependencies]
+avcopan_trialrs = { path = ".." }
+# PyO3's experimental-inspect feature lets maturin generate the type stubs (see pixi.toml).
+pyo3 = { version = "0.30", features = ["abi3-py313", "experimental-inspect"] }
+
+[lints]
+workspace = true

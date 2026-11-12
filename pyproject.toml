@@ -19,9 +19,9 @@ requires = ["maturin>=1.9,<2"]
 
 # Maturin configurations
 [tool.maturin]
-module-name = "avcopan_trialrs._core"  # compile the Rust code as a private submodule
+manifest-path = "py-avcopan_trialrs/Cargo.toml"  # the crate with the Python bindings
+module-name = "avcopan_trialrs._core"  # compile it as a private submodule
 python-source = "python"                # directory containing the Python package
-features = ["python"]                   # enable the Python bindings (see Cargo.toml)
 editable-profile = "dev"                # fast, unoptimized builds for local development
 
 # Ruff configurations

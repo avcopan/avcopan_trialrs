@@ -1,0 +1,106 @@
+//! Python bindings for the `avcopan_trialrs` library.
+//!
+//! This crate only wraps the public API of the library for Python.
+
+// The docstrings below are Python's (Google style), whose `Args:` entries name
+// parameters without backticks
+#![allow(clippy::doc_markdown)]
+// This crate is not published to crates.io, so it does not need the crates.io metadata
+#![allow(clippy::cargo_common_metadata)]
+
+use pyo3::exceptions::PyException;
+use pyo3::prelude::*;
+use pyo3::types::PyTuple;
+
+// The Python exceptions: a base class, so that Python code can catch every error of this
+// package at once, and one subclass per kind of error. They are classes (rather than
+// PyO3's shorter `create_exception!`) so that they appear in the type stubs.
+
+/// Base class of the errors raised by this package.
+#[pyclass(extends = PyException, subclass, module = "avcopan_trialrs")]
+struct Error;
+
+#[pymethods]
+impl Error {
+    // The arguments (the error message) are stored by Python's `Exception`
+    #[new]
+    #[pyo3(signature = (*_args))]
+    fn new(_args: &Bound<'_, PyTuple>) -> Self {
+        Self
+    }
+}
+
+/// Raised when a name is empty.
+#[pyclass(extends = Error, module = "avcopan_trialrs")]
+struct EmptyNameError;
+
+#[pymethods]
+impl EmptyNameError {
+    #[new]
+    #[pyo3(signature = (*_args))]
+    fn new(_args: &Bound<'_, PyTuple>) -> PyClassInitializer<Self> {
+        PyClassInitializer::from(Error).add_subclass(Self)
+    }
+}
+
+/// Wraps the library's `GreetError`, so that it can be converted to a Python exception.
+///
+/// Rust only lets a crate implement a trait for a type if it owns one of the two (the
+/// "orphan rule"). `GreetError` belongs to the library and `From` and `PyErr` to others,
+/// so the conversion is implemented for this wrapper type instead.
+struct PyGreetError(avcopan_trialrs::GreetError);
+
+impl From<avcopan_trialrs::GreetError> for PyGreetError {
+    fn from(error: avcopan_trialrs::GreetError) -> Self {
+        Self(error)
+    }
+}
+
+impl From<PyGreetError> for PyErr {
+    fn from(error: PyGreetError) -> Self {
+        use avcopan_trialrs::GreetError;
+
+        let message = error.0.to_string();
+        match error.0 {
+            GreetError::EmptyName => PyErr::new::<EmptyNameError, _>(message),
+            // `GreetError` may gain variants (it is `#[non_exhaustive]`), which raise the
+            // base class until they get their own subclass here
+            _ => PyErr::new::<Error, _>(message),
+        }
+    }
+}
+
+/// The compiled Python module, imported as `<package_name>._core`.
+///
+/// Its type stubs (`_core.pyi`) are generated from this module by `pixi run stubs`, which
+/// includes these doc comments as docstrings, so they use Python's (Google) docstring style.
+#[pymodule]
+mod _core {
+    use pyo3::prelude::*;
+
+    use super::PyGreetError;
+    #[pymodule_export]
+    use super::{EmptyNameError, Error};
+
+    /// The package version.
+    #[pymodule_export]
+    #[allow(non_upper_case_globals)] // Python's naming convention
+    const __version__: &str = env!("CARGO_PKG_VERSION");
+
+    /// Greet a person by their name.
+    ///
+    /// Args:
+    ///     name: The name of the person to greet.
+    ///
+    /// Returns:
+    ///     A greeting message.
+    ///
+    /// Raises:
+    ///     EmptyNameError: If the name is empty.
+    #[pyfunction]
+    fn greet(name: &str) -> Result<String, PyGreetError> {
+        // `?` converts the library's error to `PyGreetError`, which PyO3 raises as a
+        // Python exception
+        Ok(avcopan_trialrs::greet(name)?)
+    }
+}

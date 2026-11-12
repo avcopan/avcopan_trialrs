@@ -5,14 +5,29 @@ Its type stubs (`_core.pyi`) are generated from this module by `pixi run stubs`,
 includes these doc comments as docstrings, so they use Python's (Google) docstring style.
 """
 
-from typing import Final
+from typing import Final, final
+from typing_extensions import disjoint_base
 
-__all__ = ["__version__", "greet"]
+__all__ = ["__version__", "EmptyNameError", "Error", "greet"]
 
 __version__: Final[str]
 """
 The package version.
 """
+
+@final
+class EmptyNameError(Error):
+    """
+    Raised when a name is empty.
+    """
+    def __new__(cls, /, *_args) -> EmptyNameError: ...
+
+@disjoint_base
+class Error(Exception):
+    """
+    Base class of the errors raised by this package.
+    """
+    def __new__(cls, /, *_args) -> Error: ...
 
 def greet(name: str) -> str:
     """
@@ -23,4 +38,7 @@ def greet(name: str) -> str:
 
     Returns:
         A greeting message.
+
+    Raises:
+        EmptyNameError: If the name is empty.
     """
